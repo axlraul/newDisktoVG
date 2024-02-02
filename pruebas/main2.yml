@@ -1,0 +1,20 @@
+---
+- name: Configurar disco y Volume Group
+  hosts: localhost
+  become: true  # para ejecutar como root
+
+  tasks:
+  - name: Remove partition number 1
+    parted:
+      device: /dev/sde
+      number: 1
+      state: info
+    register: info
+
+  - name: echo
+    debug:
+      var: info
+
+  - name : echo unknown
+    debug:
+      var: info.disk.table

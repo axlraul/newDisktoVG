@@ -1,0 +1,54 @@
+- name: Lets look at some disks
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Collect only facts about hardware
+      setup:
+        gather_subset:
+          - hardware
+
+    - name: Output disks
+      set_fact:
+        list_all_available_disks: "{{ hostvars[inventory_hostname].ansible_devices.keys() | select('match', '^sd') | list }}"
+
+    - name: echo list
+      debug:
+        var: "{{ item }}"
+      loop: "{{ list_all_available_disks }}"
+
+    - name: Remove partition number 1
+      parted:
+        device: /dev/"{{ item }}"
+        number: 1
+        state: info
+      loop: "{{ list_all_available_disks }}"
+      register: info
+      ignore_errors: true
+
+    - name: echo info
+      debug:
+        var: info
+
+    - name: echo2
+      set_fact:
+        reformat: "{{ info.results }}"
+
+    - name: echo reformat
+      debug:
+        var: reformat
+
+    - name: set_fact
+      set_fact:
+        pvinfo: item.disk.table 
+      loop: "{{ reformat }}"
+
+
+    - name: echo unknown
+      debug:
+        var: reformat
+      when: " item.disk.table == 'unknown'"
+      loop: "{{ info.results }}"
+
+
+

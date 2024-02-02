@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+- name: Lets look at some disks
+  hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+  - name: Collect only facts about hardware
+    setup:
+      gather_subset:
+      - hardware
+
+  - name: Output disks
+    debug:
+      var: hostvars[inventory_hostname].ansible_devices.keys() | list

@@ -1,0 +1,43 @@
+---
+- name: Configurar disco y Volume Group
+  hosts: tu_servidor
+  become: true  # para ejecutar como root
+
+  tasks:
+    - name: Listar discos disponibles
+      parted_device_facts:
+        unit: s
+      register: discos_disponibles
+
+    - name: Filtrar discos no particionados
+      set_fact:
+        discos_no_particionados: "{{ discos_disponibles.devices | rejectattr('partitions') | map(attribute='device') | list }}"
+
+    - name: Comprobar si hay discos no particionados
+      fail:
+        msg: "No se detectaron discos no particionados."
+      when: discos_no_particionados | length == 0
+
+    - name: Obtener el primer disco no particionado
+      set_fact:
+        disco_a_configurar: "{{ discos_no_particionados | first }}"
+
+    - name: Particionar el disco
+      parted:
+        device: "{{ disco_a_configurar }}"
+        label: gpt
+        number: 1
+        state: present
+
+    - name: Notificar al kernel sobre cambios en las particiones
+      command: partprobe
+
+    - name: Añadir disco al Volume Group
+      command: vgextend tu_volume_group "{{ disco_a_configurar }}1"
+
+    - name: Redimensionar el Logical Volume
+      lvol:
+        vg: tu_volume_group
+        lv: tu_logical_volume
+        size: +100%FREE
+
