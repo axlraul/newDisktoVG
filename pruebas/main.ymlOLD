@@ -1,0 +1,14 @@
+- name: Setting new disks available to vg
+  hosts: localhost
+  become: false
+  gather_facts: false
+
+  vars:
+    vg_defined: "datavg"
+    dev: "/dev/sdj"
+
+  tasks:
+    - name: Add pv created from disk available to volume group.
+      command: vgextend {{ vg_defined }} {{ dev }}1
+      register: result_vgextend
+

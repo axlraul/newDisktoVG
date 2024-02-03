@@ -1,0 +1,9 @@
+---
+- name: List PVs related to VGs
+  hosts: localhost
+  tasks:
+    - name: Resize existing pv
+        community.general.lvg:
+          vg: testvg
+          pvs: /dev/sde1
+          pvresize: yes 
